@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatttty</title>
+    {% load static %}
+    <link href="{% static 'css/chat.css' %}" rel="stylesheet" type="text/css"/>
+    <script type="text/javascript" src="{% static 'js/chat.js' %}"></script>
+</head>
+<body>
+    <div class="chat-container">
+        <!-- TODO: create session button -->
+        <div id="session-list" onload="loadSessions()">
+            <h3>select session</h3>
+        </div>
+        <div class="chat-container">
+            <div class="chat-box" id="chat-box"></div>
+            <div class="input-container">
+                <input type="text" id="user-input" placeholder="Type a message...">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+    <script>
+        var CSRF_TOKEN = '{{ csrf_token }}';
+    </script>
+</body>
+</html>
