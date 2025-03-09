@@ -1,0 +1,90 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+form {
+    background: white;
+    padding: 2%;
+    border-radius: 5%;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 25%;
+    text-align: center;
+}
+
+form label {
+    display: block;
+    margin-top: 2%;
+    font-weight: bold;
+    text-align: left;
+}
+
+form input, form textarea {
+    width: 90%;
+    padding: 8px;
+    margin-top: 2%;
+    border: 1px solid #ccc;
+    border-radius: 2%;
+}
+
+/* Submit button */
+button {
+    margin-top: 15px;
+    width: 100%;
+    padding: 10px;
+    background-color: #009cb8;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+/* Button hover effect */
+button:hover {
+    background-color: #006f83;
+}
+
+/* Style for the paragraph */
+.signup-text .login-text{
+    margin-top: 15px;
+    font-size: 14px;
+    color: #555;
+}
+
+/* Style for the signup link */
+.signup-link .login-link{
+    color: #007bff;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.3s ease-in-out;
+}
+
+/* Hover effect */
+.signup-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* Style the error box */
+.errorlist {
+    color: #d9534f; /* Red text */
+    background: #f8d7da; /* Light red background */
+    border: 1px solid #d9534f;
+    padding: 4%;
+    border-radius: 4%;
+    margin-bottom: 4%;
+    list-style-type: none;
+}
+
+/* Style each error message */
+.errorlist.nonfield li {
+    margin: 5px 0;
+    font-weight: bold;
+}
+

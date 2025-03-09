@@ -2,21 +2,16 @@
 <head>
     <meta charset="UTF-8">
     <title>login</title>
+    {% load static %}
+    <link href="{% static 'css/login-signup.css' %}" rel="stylesheet" type="text/css"/>
 </head>
 <body>
-    <h2>Login</h2>
-    {% if form.non_field_errors %}
-        <div class="alert alert-danger">
-            {% for error in form.non_field_errors %}
-                <p style="color: red;">{{ error }}</p>
-            {% endfor %}
-        </div>
-    {% endif %}
     <form method="post">
+        <h2>Login</h2>
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">login</button>
+        <p class="signup-text">Don't have account? <a href="{% url 'signup' %}">signup</a></p>
     </form>
-    <p>Don't have account?<a href="{% url 'signup' %}">signup</a></p>
 </body>
 </html>

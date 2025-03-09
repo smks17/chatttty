@@ -2,14 +2,16 @@
 <head>
     <meta charset="UTF-8">
     <title>signup</title>
+    {% load static %}
+    <link href="{% static 'css/login-signup.css' %}" rel="stylesheet" type="text/css"/>
 </head>
 <body>
-    <h2>Signup</h2>
     <form method="post">
+        <h2>Signup</h2>
         {% csrf_token %}
         {{ form.as_p }}
         <button type="submit">signup</button>
+        <p class="login-text">Do you have account? <a href="{% url 'login' %}">login</a></p>
     </form>
-    <p>Do you have account?<a href="{% url 'login' %}">login</a></p>
 </body>
 </html>
