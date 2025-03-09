@@ -12,8 +12,6 @@ function sendMessage() {
 
     userInput.value = "";
 
-    console.log(userInputValue);
-
     fetch('chat/', {
         method: "POST",
         headers: {
@@ -24,7 +22,6 @@ function sendMessage() {
     })
     .then(response => response.json())
     .then(data => {
-        console.log(data)
         if (data.error) console.alert(data.error)
         else {
             // We add user input here because we want to sure about backend process
@@ -70,7 +67,6 @@ function loadChatHistory() {
             return
         }
         clearMessages();
-        console.log(data);
         data.session_messages.forEach(msg => {
             appendMessage(msg.role, msg.content);
         });
@@ -88,12 +84,14 @@ function loadSessions() {
     })
     .then(response => response.json())
     .then(data => {
-        sessionListDiv = document.getElementById("session-list");
+        console.log("We here")
+        sessionListDiv = document.getElementById("sessions-name");
         sessionListData = data.sessions;
         sessionListDiv.innerHTML = "";
         sessionListData.forEach(sessionData => {
             sessionLink = document.createElement("button");
-            console.log(sessionData)
+            sessionLink.className = "session";
+            console.log(sessionLink)
             sessionLink.innerHTML = `<div> ${sessionData.session_name} </div>`
             sessionLink.onclick = () => {
                 loadSession(sessionData.session_id);
@@ -109,7 +107,6 @@ function loadSessions() {
 }
 
 function loadSession(session_id) {
-    console.log(session_id)
     document.cookie = `chat_session_id=${session_id}; path=/`;
     loadChatHistory();
 }

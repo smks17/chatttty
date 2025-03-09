@@ -9,10 +9,11 @@
     <script type="text/javascript" src="{% static 'js/chat.js' %}"></script>
 </head>
 <body>
-    <div class="chat-container">
+    <div class="chat-wrapper">
         <!-- TODO: create session button -->
-        <div id="session-list" onload="loadSessions()">
+        <div id="session-list">
             <h3>select session</h3>
+            <div id="sessions-name" onload="loadSessions()"></div>
         </div>
         <div class="chat-container">
             <div class="chat-box" id="chat-box"></div>

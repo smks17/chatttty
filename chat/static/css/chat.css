@@ -10,26 +10,41 @@ body {
 
 .chat-wrapper {
     display: flex;
-    width: 600px;
-    height: 500px;
+    width: 60%;
+    height: 80%;
     background: white;
     border-radius: 10px;
     overflow: hidden;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-/* TODO */
-.session-list {
-    width: 30%;
+#session-list {
+    width: 20%;
     background: #f8f9fa;
     padding: 10px;
+    gap: 10px;
     border-right: 1px solid #ddd;
+    flex-direction: column;
     overflow-y: auto;
+    text-align: center;
+}
+
+.session {
+    width: 90%;
+    padding: 10%;
+    margin-bottom: 10px;
+    border: none;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    box-sizing: border-box;
 }
 
 .chat-container {
     width: 70%;
     display: flex;
+    flex: 1;
     flex-direction: column;
 }
 
@@ -40,6 +55,7 @@ body {
     border-bottom: 1px solid #ddd;
     display: flex;
     flex-direction: column;
+    flex: 1;
 }
 
 .chat-box {
