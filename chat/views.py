@@ -75,7 +75,7 @@ def chat(request):
         user_prompt = PromptModel(role=UserRole.ASSISTANCE, content=message, session=session)
         user_prompt.save()
         # TODO: return stream
-        return JsonResponse({"sender": request.user.username, "message": message})
+        return JsonResponse({"sender": request.user.username, "session_id": session.session_id, "message": message})
     elif request.method == "GET":
         messages = PromptModel.objects.filter(session=session).values("content", "role")
         return JsonResponse({

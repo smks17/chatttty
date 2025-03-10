@@ -10,9 +10,11 @@
 </head>
 <body>
     <div class="chat-wrapper">
-        <!-- TODO: create session button -->
         <div id="session-list">
-            <h3>select session</h3>
+            <div id="session-header">
+                <button onclick="newSession()">New session</button>
+                <h3>Select Session</h3>
+            </div>
             <div id="sessions-name" onload="loadSessions()"></div>
         </div>
         <div class="chat-container">

@@ -27,6 +27,7 @@ function sendMessage() {
             // We add user input here because we want to sure about backend process
             appendMessage("user", userInputValue);
             appendMessage("Assistance", data.message);
+            if (!doesSessionSet()) document.cookie = `chat_session_id=${data.session_id}; path=/`;
             loadSessions();  // TODO: not optimize
         }
     })
@@ -84,29 +85,35 @@ function loadSessions() {
     })
     .then(response => response.json())
     .then(data => {
-        console.log("We here")
         sessionListDiv = document.getElementById("sessions-name");
         sessionListData = data.sessions;
         sessionListDiv.innerHTML = "";
         sessionListData.forEach(sessionData => {
             sessionLink = document.createElement("button");
             sessionLink.className = "session";
-            console.log(sessionLink)
             sessionLink.innerHTML = `<div> ${sessionData.session_name} </div>`
             sessionLink.onclick = () => {
                 loadSession(sessionData.session_id);
             }
             sessionListDiv.appendChild(sessionLink);
         });
-        const cookies = `; ${document.cookie}`;
-        const part = cookies.split(`; chat_session_id=`);
-        if (part.length == 2) {
+        if (doesSessionSet())
             loadChatHistory();
-        }
     })
+}
+
+function doesSessionSet() {
+    const cookies = `; ${document.cookie}`;
+    const parts = cookies.split(`; chat_session_id=`);
+    return (parts == 2 && parts.pop().split(';').shift())
 }
 
 function loadSession(session_id) {
     document.cookie = `chat_session_id=${session_id}; path=/`;
     loadChatHistory();
+}
+
+function newSession() {
+    document.cookie = `chat_session_id=; path=/`;
+    clearMessages();
 }
