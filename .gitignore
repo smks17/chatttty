@@ -16,5 +16,6 @@ local_settings.py
 .env
 .pytest_cache/
 db.sqlite3
+staticfiles/
 
 .vscode/
