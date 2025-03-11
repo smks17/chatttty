@@ -1,112 +1,99 @@
 // TODO: clear cookies
 
+import {postRequest, getRequest} from './utils.js';
+
 document.addEventListener("DOMContentLoaded", loadSessions);
+document.addEventListener("DOMContentLoaded", () => {
+    loadSessions();
+    document.querySelector(".new-session").addEventListener("click", newSession);;
+    document.querySelector(".send-message").addEventListener("click", sendMessage);
+});
+
 
 function sendMessage() {
-    userInput = document.getElementById("user-input");
-    userInputValue = userInput.value
+    const userInput = document.getElementById("user-input");
+    const userInputValue = userInput.value
     if (!userInputValue) return;
 
-    userMessage = document.createElement("div");
+    const userMessage = document.createElement("div");
     userMessage.textContent = userInputValue;
 
     userInput.value = "";
 
-    fetch('chat/', {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": CSRF_TOKEN,
-        },
-        body: JSON.stringify({"message": userInputValue})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) console.alert(data.error)
-        else {
-            // We add user input here because we want to sure about backend process
-            appendMessage("user", userInputValue);
-            appendMessage("Assistance", data.message);
-            loadSessions();  // TODO: not optimize
-        }
-    })
+    postRequest("chat/", {"message": userInputValue}, (response) => {
+        // We add user input here because we want to sure about backend process
+        appendMessage("user", userInputValue);
+        appendMessage("Assistance", response.message);
+        if (!doesSessionSet()) document.cookie = `chat_session_id=${response.session_id}; path=/`;
+        loadSessions();  // TODO: not optimize
+    });
 }
 
 function appendMessage(sender, text) {
-    let chatBox = document.getElementById("chat-box");
+    const chatBox = document.getElementById("chat-box");
+    const divMessage = document.createElement("div")
     if (sender.toLowerCase() == "user") {
-        chatBox.innerHTML += `<div><strong>You:</strong> ${text}</div>`;
+        divMessage.innerHTML = "<strong>You:</strong>";
     } else if (sender.toLowerCase() == "assistance") {
-        chatBox.innerHTML += `<div><strong>AI:</strong> ${text}</div>`;
+        divMessage.innerHTML = "<strong>AI:</strong>";
     }
-    else {
-        console.log(`Wrong sender ${sender}`);
-    }
+    divMessage.innerHTML += `${text}`;
+    chatBox.appendChild(divMessage)
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 
 function clearMessages() {
-    let chatBox = document.getElementById("chat-box");
+    const chatBox = document.getElementById("chat-box");
     chatBox.innerHTML = "";
 }
 
 
 function loadChatHistory() {
-    fetch("/chat/", {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": CSRF_TOKEN,
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            console.log(`Error: ${data.error}`)
-            return
-        }
+    getRequest("/chat/", (data) => {
         clearMessages();
         data.session_messages.forEach(msg => {
             appendMessage(msg.role, msg.content);
         });
-    })
+    });
 }
 
 
 function loadSessions() {
-    fetch("/sessions/", {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": CSRF_TOKEN,
-        }
-    })
-    .then(response => response.json())
-    .then(data => {
-        console.log("We here")
-        sessionListDiv = document.getElementById("sessions-name");
-        sessionListData = data.sessions;
+    getRequest("/sessions/", (data) => {
+        const sessionListDiv = document.getElementById("sessions-name");
+        const sessionListData = data.sessions;
         sessionListDiv.innerHTML = "";
         sessionListData.forEach(sessionData => {
-            sessionLink = document.createElement("button");
+            const sessionLink = document.createElement("button");
             sessionLink.className = "session";
-            console.log(sessionLink)
-            sessionLink.innerHTML = `<div> ${sessionData.session_name} </div>`
+            const divSession = document.createElement("div");
+            divSession.innerHTML = `${sessionData.session_name}`;
+            sessionLink.appendChild(divSession);
             sessionLink.onclick = () => {
                 loadSession(sessionData.session_id);
             }
             sessionListDiv.appendChild(sessionLink);
         });
-        const cookies = `; ${document.cookie}`;
-        const part = cookies.split(`; chat_session_id=`);
-        if (part.length == 2) {
+        if (doesSessionSet())
             loadChatHistory();
-        }
-    })
+    });
 }
+
+function doesSessionSet() {
+    const cookies = `; ${document.cookie}`;
+    const parts = cookies.split(`; chat_session_id=`);
+    return (parts == 2 && parts.pop().split(';').shift())
+}
+
 
 function loadSession(session_id) {
     document.cookie = `chat_session_id=${session_id}; path=/`;
     loadChatHistory();
+}
+
+
+function newSession() {
+    document.cookie = `chat_session_id=; path=/`;
+    clearMessages();
 }

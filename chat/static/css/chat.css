@@ -18,6 +18,16 @@ body {
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
+#session-header {
+    width: 90%;
+    background: #f8f9fa;
+    padding: 10px;
+    gap: 10px;
+    flex-direction: row;
+    overflow-y: auto;
+    text-align: center;
+}
+
 #session-list {
     width: 20%;
     background: #f8f9fa;

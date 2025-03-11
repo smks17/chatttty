@@ -1,21 +1,22 @@
 import datetime
-from pytz import timezone
 import json
+import logging
+
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpRequest, HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from pytz import timezone
 
-from chat.models import PromptModel, SessionModel, UserRole
+from chat.functions import create_and_save_ai_response
+from chat.forms import LoginForm, SignUpForm
+from chat.models import PromptModel, SessionModel
 from chatttty.settings import TIME_ZONE
 
-from .forms import LoginForm, SignUpForm
-
-
-import logging
 
 logger = logging.getLogger("chat.views")
 
+# TODO: Using class base views
 
 def login_view(request):
     if request.user.is_authenticated:
@@ -49,47 +50,54 @@ def logout_view(request):
 @login_required(login_url="/login/")
 def chat(request):
     session_id = request.COOKIES.get("chat_session_id")
-    query = SessionModel.objects.filter(user=request.user)
-    if session_id:
-        session = query.filter(session_id=session_id).first()
-    else:
-        session_name = f"session-{query.count()}"
-        session = SessionModel(user=request.user, session_name=session_name)
-        session.save()
-        session_id = str(session.session_id)
+    session = SessionModel.get_session_or_none(
+        request.user, session_id, create_new=(request.method == "POST")
+    )
     if request.method == "POST":
         try:
+            print(request.body)
             data = json.loads(request.body)
         except Exception as exc:
-            logger.error(f"Invalid message from {request.user.username} {request.body} cause {exc}")
+            logger.error(
+                f"Invalid message from {request.user.username} {request.body} cause {exc}"
+            )
             return JsonResponse({"error": "Invalid request"}, status=400)
         message = data.get("message", "").strip()
         if not message:
             logger.error(f"Message is None from {request.user.username}")
             return JsonResponse({"error": "Invalid request"}, status=400)
         session.updated_date = datetime.datetime.now(timezone(TIME_ZONE))
-        user_prompt = PromptModel(role=UserRole.USER, content=message, session=session)
-        user_prompt.save()
-        logger.info(f"message from {request.user.username}: {message}")
-        # TODO: create real message
-        user_prompt = PromptModel(role=UserRole.ASSISTANCE, content=message, session=session)
-        user_prompt.save()
+        ai_response = create_and_save_ai_response(session, message)
+        logger.debug(f"message from {request.user.username}: {message}")
         # TODO: return stream
-        return JsonResponse({"sender": request.user.username, "message": message})
+        return JsonResponse(
+            {
+                "sender": request.user.username,
+                "session_id": session.session_id,
+                "message": ai_response,
+            }
+        )
     elif request.method == "GET":
+        if not session:
+            return JsonResponse({"error": "Invalid request"}, status=400)
         messages = PromptModel.objects.filter(session=session).values("content", "role")
-        return JsonResponse({
-            "session_id": session_id,
-            "session_name": session.session_name,
-            "session_messages": list(messages)
-        })
+        return JsonResponse(
+            {
+                "session_id": session.session_id,
+                "session_name": session.session_name,
+                "session_messages": list(messages),
+            }
+        )
     return JsonResponse({"error": "Invalid request"}, status=405)
 
 
 @login_required(login_url="/login/")
 def sessions(request):
-    # TODO: sort by updated date
-    sessions = SessionModel.objects.filter(user=request.user).values("session_id", "session_name", "created_date").order_by("-updated_date", "-created_date")
+    sessions = (
+        SessionModel.objects.filter(user=request.user)
+        .values("session_id", "session_name", "created_date")
+        .order_by("-updated_date", "-created_date")
+    )
     return JsonResponse({"sessions": list(sessions)})
 
 
