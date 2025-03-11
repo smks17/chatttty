@@ -16,6 +16,11 @@ from chatttty.settings import TIME_ZONE
 
 logger = logging.getLogger("chat.views")
 
+
+# TODO: User should choose any model and its settings
+MODEL_NAME = "Mistral"
+
+
 # TODO: Using class base views
 
 def login_view(request):
@@ -51,7 +56,7 @@ def logout_view(request):
 def chat(request):
     session_id = request.COOKIES.get("chat_session_id")
     session = SessionModel.get_session_or_none(
-        request.user, session_id, create_new=(request.method == "POST")
+        request.user, session_id, create_new=(request.method == "POST"), model_name=MODEL_NAME
     )
     if request.method == "POST":
         try:
@@ -67,8 +72,9 @@ def chat(request):
             logger.error(f"Message is None from {request.user.username}")
             return JsonResponse({"error": "Invalid request"}, status=400)
         session.updated_date = datetime.datetime.now(timezone(TIME_ZONE))
-        ai_response = create_and_save_ai_response(session, message)
+        ai_response = create_and_save_ai_response(session, message, MODEL_NAME)
         logger.debug(f"message from {request.user.username}: {message}")
+        logger.debug(f"And response: {ai_response}")
         # TODO: return stream
         return JsonResponse(
             {

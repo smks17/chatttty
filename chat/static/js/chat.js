@@ -19,22 +19,30 @@ function sendMessage() {
     userMessage.textContent = userInputValue;
 
     userInput.value = "";
-
-    postRequest("chat/", {"message": userInputValue}, (response) => {
-        // We add user input here because we want to sure about backend process
-        appendMessage("user", userInputValue);
-        appendMessage("Assistance", response.message);
-        if (!doesSessionSet()) document.cookie = `chat_session_id=${response.session_id}; path=/`;
-        loadSessions();  // TODO: not optimize
-    });
+    document.getElementsByClassName("send-message").disabled = true;
+    appendMessage("user", userInputValue);
+    document.getElementById('loading').classList.add('active');
+    setTimeout(() => {
+        postRequest("chat/", {"message": userInputValue}, (response) => {
+            // We add user input here because we want to sure about backend process
+            console.log(response)
+            appendMessage("Assistance", response.message);
+            if (!doesSessionSet()) document.cookie = `chat_session_id=${response.session_id}; path=/`;
+            loadSessions();  // TODO: not optimize
+            document.getElementsByClassName("send-message").disabled = false;
+            document.getElementById('loading').classList.remove('active');
+        }), 2000
+    })
 }
 
 function appendMessage(sender, text) {
     const chatBox = document.getElementById("chat-box");
     const divMessage = document.createElement("div")
     if (sender.toLowerCase() == "user") {
+        divMessage.className = "user-prompt"
         divMessage.innerHTML = "<strong>You:</strong>";
     } else if (sender.toLowerCase() == "assistance") {
+        divMessage.className = "ai-response"
         divMessage.innerHTML = "<strong>AI:</strong>";
     }
     divMessage.innerHTML += `${text}`;
