@@ -51,7 +51,7 @@ class PromptModel(models.Model):
     )
 
     @property
-    def lln_input(self) -> MessageInfo:
+    def llm_input(self) -> MessageInfo:
         return {
             "role": self.role.lower(),
             "content": self.content
