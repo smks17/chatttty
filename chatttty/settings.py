@@ -26,7 +26,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "123")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = os.environ.get("DJANGO_DEBUG", False)
 
 ALLOWED_HOSTS = ["chatttty.onrender.com", "0.0.0.0", "localhost", "127.0.0.1"]
 
