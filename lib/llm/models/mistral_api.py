@@ -24,11 +24,6 @@ class MistralAPI(BaseLLM):
     def get_response(self, message: MessageInfo) -> MessageInfo:
         self._add_new_prompt(message)
         chat_response = self.client.chat.complete(
-            model= self.model,
-            messages=self.chat_history,
-            **self.settings
-        )
-        chat_response = self.client.chat.complete(
             model= model,
             messages = self.chat_history,
             **self.settings
