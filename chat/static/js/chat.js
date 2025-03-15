@@ -41,7 +41,7 @@ function appendMessage(sender, text) {
     if (sender.toLowerCase() == "user") {
         divMessage.className = "user-prompt"
         divMessage.innerHTML = "<strong>You:</strong>";
-    } else if (sender.toLowerCase() == "assistance") {
+    } else if (sender.toLowerCase() == "assistant") {
         divMessage.className = "ai-response"
         divMessage.innerHTML = "<strong>AI:</strong>";
     }

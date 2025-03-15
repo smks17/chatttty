@@ -86,12 +86,11 @@ def chat(request):
     elif request.method == "GET":
         if not session:
             return JsonResponse({"error": "Invalid request"}, status=400)
-        messages = PromptModel.objects.filter(session=session).values("content", "role")
         return JsonResponse(
             {
                 "session_id": session.session_id,
                 "session_name": session.session_name,
-                "session_messages": list(messages),
+                "session_messages": session.history
             }
         )
     return JsonResponse({"error": "Invalid request"}, status=405)
