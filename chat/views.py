@@ -6,6 +6,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
+from django.views.decorators.http import require_GET, require_POST
 from pytz import timezone
 
 from chat.functions import create_and_save_ai_response
@@ -53,47 +54,54 @@ def logout_view(request):
 
 
 @login_required(login_url="/login/")
-def chat(request):
-    session_id = request.COOKIES.get("chat_session_id")
-    session = SessionModel.get_session_or_none(
-        request.user, session_id, create_new=(request.method == "POST"), model_name=MODEL_NAME
+@require_POST
+def get_message(request):
+    session_id = request.COOKIES.get("session_id")
+    session = SessionModel.get_session_or_none(request.user, session_id, model_name=MODEL_NAME)
+    if not session:
+        return JsonResponse({"error": "Invalid request"}, status=400)
+    try:
+        data = json.loads(request.body)
+    except Exception as exc:
+        logger.error(
+            f"Invalid message from {request.user.username} {request.body} cause {exc}"
+        )
+        return JsonResponse({"error": "Invalid request"}, status=400)
+    message = data.get("message", "").strip()
+    if not message:
+        logger.error(f"Message is None from {request.user.username}")
+        return JsonResponse({"error": "Invalid request"}, status=400)
+    session.updated_date = datetime.datetime.now(timezone(TIME_ZONE))
+    ai_response = create_and_save_ai_response(session, message, MODEL_NAME)
+    logger.debug(f"message from {request.user.username}: {message}")
+    logger.debug(f"And response: {ai_response}")
+    # TODO: return stream
+    return JsonResponse(
+        {
+            "sender": request.user.username,
+            "session_id": session.session_id,
+            "message": ai_response,
+        }
     )
-    if request.method == "POST":
-        try:
-            print(request.body)
-            data = json.loads(request.body)
-        except Exception as exc:
-            logger.error(
-                f"Invalid message from {request.user.username} {request.body} cause {exc}"
-            )
-            return JsonResponse({"error": "Invalid request"}, status=400)
-        message = data.get("message", "").strip()
-        if not message:
-            logger.error(f"Message is None from {request.user.username}")
-            return JsonResponse({"error": "Invalid request"}, status=400)
-        session.updated_date = datetime.datetime.now(timezone(TIME_ZONE))
-        ai_response = create_and_save_ai_response(session, message, MODEL_NAME)
-        logger.debug(f"message from {request.user.username}: {message}")
-        logger.debug(f"And response: {ai_response}")
-        # TODO: return stream
-        return JsonResponse(
-            {
-                "sender": request.user.username,
-                "session_id": session.session_id,
-                "message": ai_response,
-            }
-        )
-    elif request.method == "GET":
-        if not session:
-            return JsonResponse({"error": "Invalid request"}, status=400)
-        return JsonResponse(
-            {
-                "session_id": session.session_id,
-                "session_name": session.session_name,
-                "session_messages": session.history
-            }
-        )
-    return JsonResponse({"error": "Invalid request"}, status=405)
+
+
+@login_required(login_url="/login")
+@require_GET
+def chat_history(request, session_id):
+    # session_id = request.COOKIES.get("session_id")
+    session = SessionModel.get_session_or_none(request.user, session_id, create_new=True, model_name=MODEL_NAME)
+    response = JsonResponse({"session_messages": session.history})
+    response.set_cookie("session_id", session.session_id, httponly=True, secure=True, samesite="Strict")
+    return response
+
+
+@login_required(login_url="/login")
+@require_GET
+def new_session(request):
+    session = SessionModel.objects.create(user=request.user, model_name=MODEL_NAME)
+    response = JsonResponse(session.dump())
+    response.set_cookie("session_id", session.session_id, httponly=True, secure=True, samesite="Strict")
+    return response
 
 
 @login_required(login_url="/login/")

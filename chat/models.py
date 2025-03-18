@@ -30,14 +30,19 @@ class SessionModel(models.Model):
     def history(self):
         return [{"role": prompt.role.lower(), "content": prompt.content} for prompt in self.Prompt.all()]
 
+    def dump(self):
+        return {
+            "session_id": self.session_id,
+            "session_name": self.session_name,
+            "created_date": self.created_date,
+            "updated_date": self.updated_date,
+            "model": self.model_name
+        }
 
     @classmethod
     def get_session_or_none(cls, user, session_id, create_new=True, model_name=""):
         session = None
-        if not session_id:
-            if create_new:
-                return cls.objects.create(user=user, model_name=model_name)
-        else:
+        if session_id:
             session = cls.objects.filter(user=user, session_id=session_id).first()
         return session
 

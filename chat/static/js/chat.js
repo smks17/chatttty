@@ -2,18 +2,24 @@
 
 import {postRequest, getRequest} from './utils.js';
 
-document.addEventListener("DOMContentLoaded", loadSessions);
+let sessions = new Map();
+let anySessionLoaded = false;
+
 document.addEventListener("DOMContentLoaded", () => {
+    clearCookies();
     loadSessions();
     document.querySelector(".new-session").addEventListener("click", newSession);;
     document.querySelector(".send-message").addEventListener("click", sendMessage);
 });
 
 
-function sendMessage() {
+async function sendMessage() {
     const userInput = document.getElementById("user-input");
     const userInputValue = userInput.value
     if (!userInputValue) return;
+
+    if (!anySessionLoaded)
+        await createSession();
 
     const userMessage = document.createElement("div");
     userMessage.textContent = userInputValue;
@@ -24,16 +30,31 @@ function sendMessage() {
     document.getElementById('loading').classList.add('active');
     setTimeout(() => {
         postRequest("chat/", {"message": userInputValue}, (response) => {
+            console.log(response);
             // We add user input here because we want to sure about backend process
-            console.log(response)
-            appendMessage("Assistance", response.message);
-            if (!doesSessionSet()) document.cookie = `chat_session_id=${response.session_id}; path=/`;
-            loadSessions();  // TODO: not optimize
+            appendMessage("Assistant", response.message);
             document.getElementsByClassName("send-message").disabled = false;
             document.getElementById('loading').classList.remove('active');
-        }), 2000
+    }), 2000
     })
 }
+
+
+async function createSession() {
+    return new Promise((resolve, reject) => {
+        getRequest("create-session/", (response) => {
+            if (response.error) {
+                alert(response.error);
+                reject(response.error);
+            } else {
+                createSessionButton(response, undefined);
+                anySessionLoaded = true;
+                resolve(response);
+            }
+        })
+    });
+}
+
 
 function appendMessage(sender, text) {
     const chatBox = document.getElementById("chat-box");
@@ -57,10 +78,12 @@ function clearMessages() {
 }
 
 
-function loadChatHistory() {
-    getRequest("/chat/", (data) => {
+function loadChatHistory(sessionButton) {
+    const sessionId = sessions.get(sessionButton)
+    getRequest(`/session/${sessionId}`, (data) => {
         clearMessages();
         data.session_messages.forEach(msg => {
+            console.log(msg)
             appendMessage(msg.role, msg.content);
         });
     });
@@ -73,35 +96,37 @@ function loadSessions() {
         const sessionListData = data.sessions;
         sessionListDiv.innerHTML = "";
         sessionListData.forEach(sessionData => {
-            const sessionLink = document.createElement("button");
-            sessionLink.className = "session";
-            const divSession = document.createElement("div");
-            divSession.innerHTML = `${sessionData.session_name}`;
-            sessionLink.appendChild(divSession);
-            sessionLink.onclick = () => {
-                loadSession(sessionData.session_id);
-            }
-            sessionListDiv.appendChild(sessionLink);
+            createSessionButton(sessionData, sessionListDiv);
         });
-        if (doesSessionSet())
+        if (anySessionLoaded)
             loadChatHistory();
     });
 }
 
-function doesSessionSet() {
-    const cookies = `; ${document.cookie}`;
-    const parts = cookies.split(`; chat_session_id=`);
-    return (parts == 2 && parts.pop().split(';').shift())
+
+function createSessionButton(sessionData, sessionListDiv) {
+    if (sessionListDiv == undefined)
+        sessionListDiv = document.getElementById("sessions-name");
+    const sessionLink = document.createElement("button");
+    sessionLink.className = "session";
+    const divSession = document.createElement("div");
+    divSession.innerHTML = `${sessionData.session_name}`;
+    sessionLink.appendChild(divSession);
+    sessionLink.onclick = () => { loadChatHistory(sessionLink); };
+    sessions.set(sessionLink, sessionData.session_id);
+    sessionListDiv.appendChild(sessionLink);
+    // TODO: Sort by updated date
 }
 
 
-function loadSession(session_id) {
-    document.cookie = `chat_session_id=${session_id}; path=/`;
-    loadChatHistory();
+function clearCookies() {
+    anySessionLoaded = false;
+    document.cookie = "session_id=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
 }
 
 
 function newSession() {
-    document.cookie = `chat_session_id=; path=/`;
+    anySessionLoaded = false;
+    clearCookies()
     clearMessages();
 }

@@ -10,7 +10,7 @@ function postRequest(route, input_date, callback) {
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            console.alert(data.error);
+            alert(data.error);
         }
         else {
             return callback(data);
@@ -29,7 +29,7 @@ function getRequest(route, callback) {
     .then(response => response.json())
     .then(data => {
         if (data.error) {
-            console.alert(data.error);
+            alert(data.error);
         }
         else {
             return callback(data);
