@@ -28,4 +28,4 @@ def get_all_subclasses(cls) -> List[BaseLLM]:
 import_submodules(models)
 ModelsEnum = Enum("Models", {cls.LLM_NAME: cls for cls in get_all_subclasses(BaseLLM)})
 
-assert len(ModelsEnum) == 1, "You add/remove any models and you should use `makemigrations`"
+assert len(ModelsEnum) == 2, "You add/remove any models and you should use `makemigrations`"
