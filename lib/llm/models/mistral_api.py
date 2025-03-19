@@ -1,6 +1,6 @@
 import os
 import sys
-from typing import List, Optional, Union
+from typing import Generator, List, Optional
 
 sys.path.append(".")
 
@@ -20,16 +20,27 @@ class MistralAPI(BaseLLM):
         self.client = Mistral(api_key=api_key)
         self.chat_history: List[MessageInfo] = chat_history or []
         self.settings = settings or {}
+        self.last_response = ""
 
-    def get_response(self, message: MessageInfo) -> MessageInfo:
+    def get_response(self, message: MessageInfo) -> Generator:
         self._add_new_prompt(message)
-        chat_response = self.client.chat.complete(
+        self.last_response = ""
+        for chunk_response in self.client.chat.stream(
             model= model,
             messages = self.chat_history,
+            stream=True,
             **self.settings
-        )
-        ai_response = chat_response.choices[0].message
-        ai_response = {"role": ai_response.role, "content": ai_response.content}
+        ):
+            if chunk_response == "[DONE]":
+                break
+            chunk = chunk_response.data.choices[0].delta.content
+            if not chunk:
+                continue
+            self.last_response += chunk
+            yield chunk
+
+    def get_and_save_last_response(self) -> MessageInfo:
+        ai_response = {"role": "Assistant", "content": self.last_response}
         self._add_new_prompt(ai_response)
         return ai_response
 

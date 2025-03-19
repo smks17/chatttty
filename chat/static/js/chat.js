@@ -13,6 +13,39 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
+async function fetchStreamMessage(userInputValue) {
+    const response = await fetch("chat/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": CSRF_TOKEN,
+        },
+        body: JSON.stringify({"message": userInputValue})
+    })
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    const chatBox = document.getElementById("chat-box");
+    const divMessage = document.createElement("div")
+    divMessage.className = "ai-response"
+    divMessage.innerHTML = "<strong>AI:</strong>";
+    chatBox.appendChild(divMessage)
+    
+    while (true) {
+        const { value, done } = await reader.read();
+        if (done) {
+            console.log("Stream ended");
+            break;
+        }
+        
+        const textChunk = decoder.decode(value, { stream: true });
+        divMessage.innerHTML += `${textChunk}`;
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+}
+
+
 async function sendMessage() {
     const userInput = document.getElementById("user-input");
     const userInputValue = userInput.value
@@ -29,14 +62,10 @@ async function sendMessage() {
     appendMessage("user", userInputValue);
     document.getElementById('loading').classList.add('active');
     setTimeout(() => {
-        postRequest("chat/", {"message": userInputValue}, (response) => {
-            console.log(response);
-            // We add user input here because we want to sure about backend process
-            appendMessage("Assistant", response.message);
-            document.getElementsByClassName("send-message").disabled = false;
-            document.getElementById('loading').classList.remove('active');
-    }), 2000
-    })
+        fetchStreamMessage(userInputValue);
+        document.getElementById('loading').classList.remove('active');
+    }, 2000)
+    document.getElementsByClassName("send-message").disabled = false;
 }
 
 

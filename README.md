@@ -29,7 +29,7 @@ settings.py` Also provide a Mistral API key as an environment variable `MISTRAL_
 ## TODO
 - [ ] Adding more models
 - [ ] Adding model settings
-- [ ] Sending stream https response
+- [x] Sending stream https response
 - [ ] Temporarily chat
 - [ ] Adding fine tuning
 - [ ] Dockerize

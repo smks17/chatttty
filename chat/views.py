@@ -4,14 +4,14 @@ import logging
 
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_GET, require_POST
 from pytz import timezone
 
 from chat.functions import create_and_save_ai_response
 from chat.forms import LoginForm, SignUpForm
-from chat.models import PromptModel, SessionModel
+from chat.models import SessionModel
 from chatttty.settings import TIME_ZONE
 
 
@@ -72,17 +72,8 @@ def get_message(request):
         logger.error(f"Message is None from {request.user.username}")
         return JsonResponse({"error": "Invalid request"}, status=400)
     session.updated_date = datetime.datetime.now(timezone(TIME_ZONE))
-    ai_response = create_and_save_ai_response(session, message, MODEL_NAME)
-    logger.debug(f"message from {request.user.username}: {message}")
-    logger.debug(f"And response: {ai_response}")
-    # TODO: return stream
-    return JsonResponse(
-        {
-            "sender": request.user.username,
-            "session_id": session.session_id,
-            "message": ai_response,
-        }
-    )
+    response = StreamingHttpResponse(create_and_save_ai_response(session, message, MODEL_NAME), content_type='text/plain')
+    return response
 
 
 @login_required(login_url="/login")
