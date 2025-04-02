@@ -1,6 +1,8 @@
 Django==4.2.9
+dotenv==0.9.9
 gunicorn==23.0.0
 mistralai==1.5.1
+mysqlclient==2.2.7
 pytz==2022.1
 uvicorn==0.23.2
 whitenoise==6.9.0

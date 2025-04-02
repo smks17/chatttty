@@ -1,16 +1,42 @@
 services:
- chatttty:
-   build: .
-   container_name: chatttty
-   ports:
-     - "8000:8000"
-   environment:
-     DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
-     DEBUG: ${DEBUG}
-     MISTRAL_API_KEY: ${MISTRAL_API_KEY}
-   env_file:
-     - .env
-   networks:
-     - webnet
+  db:
+    container_name: db
+    image: mysql:8.0
+    restart: always
+    command: mysqld --default-authentication-plugin=mysql_native_password --bind-address=${DATABASE_IP_ADDRESS} --port=${DATABASE_PORT}
+    volumes:
+      - ./mysql:/var/lib/mysql
+    env_file:
+      - ./.env
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DATABASE_ROOT_PASSWORD}
+      - MYSQL_USER=${DATABASE_USERNAME}
+      - MYSQL_PASSWORD=${DATABASE_PASSWORD}
+      - MYSQL_DATABASE=${DATABASE_NAME}
+      - MYSQL_HOST=${DATABASE_HOST}
+      - MYSQL_PORT=${DATABASE_PORT}
+      - MYSQL_IP_ADDRESS=${DATABASE_IP_ADDRESS}
+    # ports:
+    #   - "${DATABASE_PORT}:${DATABASE_PORT}"
+    networks:
+      - app-network
+
+  chatttty:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatttty
+    volumes:
+      - .:/app
+    ports:
+      - "${DJANGO_PORT}:${DJANGO_PORT}"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    networks:
+      - app-network
+
 networks:
-  webnet:
+  app-network:
+    driver: bridge

@@ -8,7 +8,7 @@ from mistralai import Dict, Mistral
 
 from lib.llm.base_llm import BaseLLM, MessageInfo
 
-api_key = os.environ.get("MISTRAL_API_KEY")
+api_key = os.getenv("MISTRAL_API_KEY")
 model = "mistral-large-latest"
 
 

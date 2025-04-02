@@ -10,10 +10,9 @@ ENV PYTHONUNBUFFERED=1
 
 # Build
 RUN pip install --upgrade pip
-COPY . /app/
+COPY . .
 RUN chmod +x ./build.sh
 RUN ./build.sh
-EXPOSE 8000
 
 # Run Django’s server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["/app/entrypoint.sh"]
