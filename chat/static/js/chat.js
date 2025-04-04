@@ -1,5 +1,3 @@
-// TODO: clear cookies
-
 import {postRequest, getRequest} from './utils.js';
 
 let sessions = new Map();
@@ -8,7 +6,7 @@ let anySessionLoaded = false;
 document.addEventListener("DOMContentLoaded", () => {
     clearCookies();
     loadSessions();
-    document.querySelector(".new-session").addEventListener("click", newSession);;
+    document.querySelector(".new-session").addEventListener("click", newSession);
     document.querySelector(".send-message").addEventListener("click", sendMessage);
 });
 
@@ -108,11 +106,11 @@ function clearMessages() {
 
 
 function loadChatHistory(sessionButton) {
-    const sessionId = sessions.get(sessionButton)
+    const sessionId = sessions.get(sessionButton);
     getRequest(`/session/${sessionId}`, (data) => {
         clearMessages();
+        document.cookie = `session_id=${sessionId}; path=/`;
         data.session_messages.forEach(msg => {
-            console.log(msg)
             appendMessage(msg.role, msg.content);
         });
     });
@@ -124,7 +122,7 @@ function loadSessions() {
         const sessionListDiv = document.getElementById("sessions-name");
         const sessionListData = data.sessions;
         sessionListDiv.innerHTML = "";
-        sessionListData.forEach(sessionData => {
+        sessionListData.slice().reverse().forEach(sessionData => {
             createSessionButton(sessionData, sessionListDiv);
         });
         if (anySessionLoaded)
@@ -141,9 +139,12 @@ function createSessionButton(sessionData, sessionListDiv) {
     const divSession = document.createElement("div");
     divSession.innerHTML = `${sessionData.session_name}`;
     sessionLink.appendChild(divSession);
-    sessionLink.onclick = () => { loadChatHistory(sessionLink); };
+    sessionLink.onclick = () => {
+        anySessionLoaded = true;
+        loadChatHistory(sessionLink);
+    };
     sessions.set(sessionLink, sessionData.session_id);
-    sessionListDiv.appendChild(sessionLink);
+    sessionListDiv.prepend(sessionLink);
     // TODO: Sort by updated date
 }
 
@@ -156,6 +157,6 @@ function clearCookies() {
 
 function newSession() {
     anySessionLoaded = false;
-    clearCookies()
+    clearCookies();
     clearMessages();
 }
