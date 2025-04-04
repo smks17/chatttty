@@ -21,6 +21,18 @@ services:
     networks:
       - app-network
 
+  cache:
+    container_name: cache
+    image: redis:alpine
+    restart: always
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "on", "+@all"]
+    env_file:
+      - ./.env
+    ports:
+      - "${REDIS_PORT}:${REDIS_PORT}"
+    networks:
+      - app-network
+
   chatttty:
     build:
       context: .
@@ -34,9 +46,14 @@ services:
       - .env
     depends_on:
       - db
+      - cache
     networks:
       - app-network
 
 networks:
   app-network:
     driver: bridge
+
+volumes:
+  cache:
+    driver: local

@@ -58,6 +58,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "chat.middleware.MappingCacheMiddleware"
 ]
 
 ROOT_URLCONF = "chatttty.urls"
@@ -94,6 +95,26 @@ DATABASES = {
             'host': os.getenv('DATABASE_HOST'),
             'port': int(os.getenv('DATABASE_PORT', 3636))
         },
+    }
+}
+
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": f"redis://:{os.getenv('REDIS_PASSWORD', '')}@{os.getenv('REDIS_HOST', 'localhost')}:{os.getenv('REDIS_PORT', 6379)}/{os.getenv('REDIS_DB', 1)}",
+    }
+}
+
+
+CACHE_MAP = {
+    "/sessions/": {
+        "cache_time": 60 * 60,
+        "invalidate_ons": ["/create-session/"]
+    },
+    r"^\/session\/(?P<session_id>[A-Za-z0-9\-\_]+)$": {
+        "cache_time": 60 * 60,
+        "invalidate_ons": ["/chat/"]
     }
 }
 
