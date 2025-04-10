@@ -69,7 +69,7 @@ async function sendMessage() {
 
 async function createSession() {
     return new Promise((resolve, reject) => {
-        getRequest("create-session/", (response) => {
+        postRequest("sessions/", {}, (response) => {
             if (response.error) {
                 alert(response.error);
                 reject(response.error);

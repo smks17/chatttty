@@ -110,11 +110,12 @@ CACHES = {
 CACHE_MAP = {
     "/sessions/": {
         "cache_time": 60 * 60,
-        "invalidate_ons": ["/create-session/"]
+        "method": "GET",
+        "invalidate_ons": [{"url": "/sessions/", "method": "POST"}]
     },
     r"^\/session\/(?P<session_id>[A-Za-z0-9\-\_]+)$": {
         "cache_time": 60 * 60,
-        "invalidate_ons": ["/chat/"]
+        "invalidate_ons": [{"url": "/chat/"}]
     }
 }
 

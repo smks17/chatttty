@@ -35,19 +35,20 @@ class MappingCacheMiddleware(MiddlewareMixin):
         return url
 
     def process_request(self, request):
-        if self.get_settings(request.path):
+        if (settings := self.get_settings(request.path)) and settings.get("method", request.method) == request.method:
             cache_key = self.get_cache_key(request, request.path)
             if cache_value := cache.get(cache_key):
                 return cache_value
         for key_path, settings in self.cache_map.items():
-            if any(re.match(p, request.path) for p in settings["invalidate_ons"]):
-                path = self.replace_with_cookies(key_path, request.COOKIES)
-                cache_key = self.get_cache_key(request, path)
-                cache.delete(cache_key)
-                return
+            for p in settings["invalidate_ons"]:
+                if re.match(p["url"], request.path) and p.get("method", request.method) == request.method:
+                    path = self.replace_with_cookies(key_path, request.COOKIES)
+                    cache_key = self.get_cache_key(request, path)
+                    cache.delete(cache_key)
+                    return
 
     def process_response(self, request, response):
-        if settings := self.get_settings(request.path):
+        if (settings := self.get_settings(request.path)) and settings.get("method", request.method) == request.method:
             cache_key = self.get_cache_key(request, request.path)
             if not cache.has_key(cache_key):
                 cache.set(cache_key, response, settings.get("cache_time", 60 * 15))

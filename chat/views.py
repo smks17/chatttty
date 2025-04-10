@@ -86,23 +86,23 @@ def chat_history(request, session_id):
     return response
 
 
-@login_required(login_url="/login")
-@require_GET
-def new_session(request):
-    session = SessionModel.objects.create(user=request.user, model_name=MODEL_NAME)
-    response = JsonResponse(session.dump())
-    response.set_cookie("session_id", session.session_id, httponly=True, secure=True, samesite="Strict")
-    return response
-
-
 @login_required(login_url="/login/")
 def sessions(request):
-    sessions = (
-        SessionModel.objects.filter(user=request.user)
-        .values("session_id", "session_name", "created_date")
-        .order_by("-updated_date", "-created_date")
-    )
-    return JsonResponse({"sessions": list(sessions)})
+    if request.method == "GET":
+        sessions = (
+            SessionModel.objects.filter(user=request.user)
+            .values("session_id", "session_name", "created_date")
+            .order_by("-updated_date", "-created_date")
+        )
+        return JsonResponse({"sessions": list(sessions)})
+    if request.method == "POST":
+        # New session
+        session = SessionModel.objects.create(user=request.user, model_name=MODEL_NAME)
+        response = JsonResponse(session.dump())
+        response.set_cookie("session_id", session.session_id, httponly=True, secure=True, samesite="Strict")
+        return response
+    else:
+        return JsonResponse({"error": "Invalid request"}, status=400)
 
 
 @login_required(login_url="/login/")
